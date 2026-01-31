@@ -26,4 +26,5 @@ jobs:
             echo "CLOUDFLARE_WORKER_NAME is required" >&2
             exit 1
           fi
-          wrangler deploy --name "$CLOUDFLARE_WORKER_NAME" --account-id "$CLOUDFLARE_ACCOUNT_ID"
+          export CLOUDFLARE_ACCOUNT_ID
+          wrangler deploy --name "$CLOUDFLARE_WORKER_NAME"
