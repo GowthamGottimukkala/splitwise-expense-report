@@ -1,0 +1,49 @@
+name: Splitwise Expense Report
+
+on:
+  workflow_dispatch:
+    inputs:
+      dated_after:
+        description: "Start date (YYYY-MM-DD)"
+        required: false
+      dated_before:
+        description: "End date (YYYY-MM-DD)"
+        required: false
+      chat_id:
+        description: "Telegram chat ID"
+        required: false
+      group_id:
+        description: "Optional group ID"
+        required: false
+      currency:
+        description: "Currency label (default USD)"
+        required: false
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: Run report
+        run: |
+          args=""
+          if [ -n "${{ inputs.group_id }}" ]; then args="$args --group-id ${{ inputs.group_id }}"; fi
+          if [ -n "${{ inputs.dated_after }}" ]; then args="$args --dated-after ${{ inputs.dated_after }}"; fi
+          if [ -n "${{ inputs.dated_before }}" ]; then args="$args --dated-before ${{ inputs.dated_before }}"; fi
+          if [ -n "${{ inputs.currency }}" ]; then args="$args --currency ${{ inputs.currency }}"; fi
+          python splitwise_expense_report.py $args > report.txt
+        env:
+          SPLITWISE_TOKEN: ${{ secrets.SPLITWISE_TOKEN }}
+      - name: Send report to Worker
+        run: |
+          curl -sS -X POST "${WORKER_URL}" \
+            -H "Content-Type: application/json" \
+            -H "X-Worker-Token: ${WORKER_TOKEN}" \
+            -d "$(jq -Rs --arg report_type 'report' --arg chat_id "${{ inputs.chat_id }}" '{type:$report_type, report:., chat_id:$chat_id}' report.txt)"
+        env:
+          WORKER_URL: ${{ secrets.WORKER_URL }}
+          WORKER_TOKEN: ${{ secrets.WORKER_TOKEN }}
