@@ -3,20 +3,11 @@ name: Splitwise Expense Report
 on:
   workflow_dispatch:
     inputs:
-      dated_after:
-        description: "Start date (YYYY-MM-DD)"
-        required: false
-      dated_before:
-        description: "End date (YYYY-MM-DD)"
-        required: false
       chat_id:
         description: "Telegram chat ID"
         required: false
-      group_id:
-        description: "Optional group ID"
-        required: false
-      currency:
-        description: "Currency label (default USD)"
+      args:
+        description: "Raw CLI args forwarded from Telegram"
         required: false
 
 jobs:
@@ -30,12 +21,7 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Run report
         run: |
-          args=""
-          if [ -n "${{ inputs.group_id }}" ]; then args="$args --group-id ${{ inputs.group_id }}"; fi
-          if [ -n "${{ inputs.dated_after }}" ]; then args="$args --dated-after ${{ inputs.dated_after }}"; fi
-          if [ -n "${{ inputs.dated_before }}" ]; then args="$args --dated-before ${{ inputs.dated_before }}"; fi
-          if [ -n "${{ inputs.currency }}" ]; then args="$args --currency ${{ inputs.currency }}"; fi
-          python splitwise_expense_report.py $args > report.txt
+          python splitwise_expense_report.py ${{ inputs.args }} > report.txt
         env:
           SPLITWISE_TOKEN: ${{ secrets.SPLITWISE_TOKEN }}
       - name: Send report to Worker

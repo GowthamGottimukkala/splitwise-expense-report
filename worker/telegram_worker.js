@@ -37,31 +37,25 @@ export default {
       await sendMessage(
         env,
         chatId,
-        "Commands:\n/report YYYY-MM-DD YYYY-MM-DD [group_id] [currency]\n/report (uses current month)\n/help"
+        "Commands:\n/report [args...] (forwarded to script)\n/help\nExample: /report --dated-after 2024-01-01 --dated-before 2024-01-31 --group-id 123456"
       );
       return new Response("Help", { status: 200 });
     }
 
     if (command !== "/report") {
-      await sendMessage(env, chatId, "Use /report YYYY-MM-DD YYYY-MM-DD [group_id] [currency] or /help");
+      await sendMessage(env, chatId, "Use /report [args...] or /help");
       return new Response("Ignored", { status: 200 });
     }
 
-    const datedAfter = args[0] || "";
-    const datedBefore = args[1] || "";
-    const groupId = args[2] || "";
-    const currency = args[3] || "";
+    const forwardedArgs = args.join(" ");
 
     await sendMessage(env, chatId, "Running report... this can take a minute.");
 
     const payload = {
       ref: env.GITHUB_REF || "main",
       inputs: {
-        dated_after: datedAfter,
-        dated_before: datedBefore,
         chat_id: String(chatId),
-        group_id: groupId,
-        currency: currency,
+        args: forwardedArgs,
       },
     };
 

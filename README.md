@@ -46,8 +46,9 @@ python splitwise_expense_report.py --dated-after 2024-01-01 --dated-before 2024-
 ```
 
 **Trigger via Telegram (requires Cloudflare Worker setup below):**
+
 ```
-/report 2024-01-01 2024-01-31 123456 USD
+/report --dated-after 2024-01-01 --dated-before 2024-01-31 --group-id 123456 --currency USD
 ```
 
 ### Options
@@ -64,18 +65,21 @@ This lets you send `/report` commands directly in Telegram and receive the repor
 1. Create a GitHub personal access token (classic) with `repo` and `workflow` scopes.
 2. Deploy the Cloudflare Worker at `worker/telegram_worker.js`.
 3. Add GitHub **Repository Secrets** (Repo → Settings → Secrets and variables → Actions):
-   - `SPLITWISE_TOKEN`
-   - `WORKER_URL`
-   - `WORKER_TOKEN`
+   - `SPLITWISE_TOKEN` (Splitwise API key)
+   - `WORKER_URL` (Cloudflare Worker URL)
+   - `WORKER_TOKEN` (random secret you choose)
+   - `CLOUDFLARE_API_TOKEN` (Cloudflare API token)
+   - `CLOUDFLARE_ACCOUNT_ID` (Cloudflare dashboard → Account ID)
+   - `CLOUDFLARE_WORKER_NAME` (your Worker name)
 4. In your Worker settings, add these environment variables:
-   - `TELEGRAM_BOT_TOKEN`
-   - `GITHUB_TOKEN`
-   - `GITHUB_OWNER` (e.g., `your-username`)
-   - `GITHUB_REPO` (e.g., `splitwise-updates`)
+   - `TELEGRAM_BOT_TOKEN` (from @BotFather)
+   - `GITHUB_TOKEN` (GitHub PAT with repo + workflow scopes)
+   - `GITHUB_OWNER` (your GitHub username)
+   - `GITHUB_REPO` (your repo name)
    - `GITHUB_WORKFLOW_FILE` (e.g., `splitwise-expense-report.yml`)
    - `GITHUB_REF` (optional, default `main`)
-   - `ALLOWED_TELEGRAM_USERNAME` (set to your Telegram username)
-   - `WORKER_TOKEN` (shared secret used by GitHub Actions)
+   - `ALLOWED_TELEGRAM_USERNAME` (your Telegram username)
+   - `WORKER_TOKEN` (same value as GitHub secret)
 5. Set the Telegram webhook to your Worker URL:
    ```
    https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/setWebhook?url=<WORKER_URL>
@@ -84,10 +88,33 @@ This lets you send `/report` commands directly in Telegram and receive the repor
 Command format:
 
 ```
-/report 2024-01-01 2024-01-31 123456 USD
+/report [args...]
 ```
 
-- Dates are optional (defaults to current month).
-- `group_id` and `currency` are optional.
+Example:
+
+```
+/report --dated-after 2024-01-01 --dated-before 2024-01-31 --group-id 123456 --currency USD
+```
+
+If you omit args, it defaults to the current month.
 
 Note: GitHub Actions picks up workflows automatically once the `.github/workflows` file is pushed to your repo.
+
+**Architecture (Telegram → GitHub Actions)**
+
+```
+Telegram /report
+      │
+      ▼
+Cloudflare Worker (auth + webhook)
+      │
+      ▼
+GitHub Actions (runs splitwise_expense_report.py)
+      │
+      ▼
+Cloudflare Worker (callback)
+      │
+      ▼
+Telegram response
+```
