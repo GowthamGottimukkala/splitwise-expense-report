@@ -5,7 +5,7 @@ export default {
     }
 
     const workerToken = request.headers.get("X-Worker-Token");
-    if (workerToken && env.WORKER_TOKEN && workerToken === env.WORKER_TOKEN) {
+    if (workerToken && env.CLOUDFLARE_WORKER_TOKEN && workerToken === env.CLOUDFLARE_WORKER_TOKEN) {
       const payload = await request.json();
       if (payload?.type === "report" && payload.report && payload.chat_id) {
         await sendMessage(env, payload.chat_id, payload.report);
@@ -27,7 +27,7 @@ export default {
       return new Response("No chat", { status: 200 });
     }
 
-    if (env.ALLOWED_TELEGRAM_USERNAME && username !== env.ALLOWED_TELEGRAM_USERNAME) {
+    if (env.TELEGRAM_ALLOWED_USERNAME && username !== env.TELEGRAM_ALLOWED_USERNAME) {
       await sendMessage(env, chatId, "Unauthorized user.");
       return new Response("Unauthorized", { status: 403 });
     }
@@ -52,7 +52,7 @@ export default {
     await sendMessage(env, chatId, "Running report... this can take a minute.");
 
     const payload = {
-      ref: env.GITHUB_REF || "main",
+      ref: env.GH_REF || "main",
       inputs: {
         chat_id: String(chatId),
         args: forwardedArgs,
@@ -60,11 +60,11 @@ export default {
     };
 
     const triggerResponse = await fetch(
-      `https://api.github.com/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/actions/workflows/${env.GITHUB_WORKFLOW_FILE}/dispatches`,
+      `https://api.github.com/repos/${env.GH_OWNER}/${env.GH_REPO}/actions/workflows/${env.GH_WORKFLOW_FILE}/dispatches`,
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${env.GITHUB_TOKEN}`,
+          Authorization: `Bearer ${env.GH_TOKEN}`,
           "User-Agent": "splitwise-telegram-bot",
           Accept: "application/vnd.github+json",
         },

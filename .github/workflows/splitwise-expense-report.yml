@@ -26,10 +26,10 @@ jobs:
           SPLITWISE_TOKEN: ${{ secrets.SPLITWISE_TOKEN }}
       - name: Send report to Worker
         run: |
-          curl -sS -X POST "${WORKER_URL}" \
+          curl -sS -X POST "${CLOUDFLARE_WORKER_URL}" \
             -H "Content-Type: application/json" \
-            -H "X-Worker-Token: ${WORKER_TOKEN}" \
+            -H "X-Worker-Token: ${CLOUDFLARE_WORKER_TOKEN}" \
             -d "$(jq -Rs --arg report_type 'report' --arg chat_id "${{ inputs.chat_id }}" '{type:$report_type, report:., chat_id:$chat_id}' report.txt)"
         env:
-          WORKER_URL: ${{ secrets.WORKER_URL }}
-          WORKER_TOKEN: ${{ secrets.WORKER_TOKEN }}
+          CLOUDFLARE_WORKER_URL: ${{ secrets.CLOUDFLARE_WORKER_URL }}
+          CLOUDFLARE_WORKER_TOKEN: ${{ secrets.CLOUDFLARE_WORKER_TOKEN }}

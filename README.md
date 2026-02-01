@@ -62,27 +62,24 @@ python splitwise_expense_report.py --dated-after 2024-01-01 --dated-before 2024-
 
 This lets you send `/report` commands directly in Telegram and receive the report back.
 
-1. Create a GitHub personal access token (classic) with `repo` and `workflow` scopes.
-2. Deploy the Cloudflare Worker at `worker/telegram_worker.js`.
-3. Add GitHub **Repository Secrets** (Repo → Settings → Secrets and variables → Actions):
+1. Add GitHub **Repository Secrets** (Repo → Settings → Secrets and variables → Actions):
    - `SPLITWISE_TOKEN` (Splitwise API key)
-   - `WORKER_URL` (Cloudflare Worker URL)
-   - `WORKER_TOKEN` (random secret you choose)
+   - `CLOUDFLARE_WORKER_URL` (Cloudflare Worker URL)
+   - `CLOUDFLARE_WORKER_TOKEN` (random secret you choose; authenticates GitHub callback)
    - `CLOUDFLARE_API_TOKEN` (Cloudflare API token)
    - `CLOUDFLARE_ACCOUNT_ID` (Cloudflare dashboard → Account ID)
    - `CLOUDFLARE_WORKER_NAME` (your Worker name)
-4. In your Worker settings, add these environment variables:
    - `TELEGRAM_BOT_TOKEN` (from @BotFather)
-   - `GITHUB_TOKEN` (GitHub PAT with repo + workflow scopes)
-   - `GITHUB_OWNER` (your GitHub username)
-   - `GITHUB_REPO` (your repo name)
-   - `GITHUB_WORKFLOW_FILE` (e.g., `splitwise-expense-report.yml`)
-   - `GITHUB_REF` (optional, default `main`)
-   - `ALLOWED_TELEGRAM_USERNAME` (your Telegram username)
-   - `WORKER_TOKEN` (same value as GitHub secret)
-5. Set the Telegram webhook to your Worker URL:
+   - `TELEGRAM_ALLOWED_USERNAME` (your Telegram username)
+   - `GH_TOKEN` (GitHub PAT with repo + workflow scopes)
+   - `GH_OWNER` (your GitHub username)
+   - `GH_REPO` (your repo name)
+   - `GH_WORKFLOW_FILE` (e.g., `splitwise-expense-report.yml`)
+   - `GH_REF` (optional, default `main`)
+2. Deploy the Worker (auto-deploy will sync these secrets to the Worker each time).
+3. Set the Telegram webhook to your Worker URL:
    ```
-   https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/setWebhook?url=<WORKER_URL>
+   https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/setWebhook?url=<CLOUDFLARE_WORKER_URL>
    ```
 
 Command format:
